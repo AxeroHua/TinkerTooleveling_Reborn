@@ -169,7 +169,8 @@ public class ModToolLeveling extends Modifier implements BlockBreakModifierHook,
 
             if (!player.level().isClientSide) {
                 SoundUtils.playSoundForAll(player, TinkerLeveling.SOUND_LEVELUP, 1f, 1f);
-                TinkerPacketHandler.sendLevelUp(level, player);
+                Component toolName = Component.translatable(tool.getItem().getDescriptionId());
+                TinkerPacketHandler.sendLevelUp(level, player, toolName);
             }
 
             if (tool instanceof ToolStack toolStack) {
