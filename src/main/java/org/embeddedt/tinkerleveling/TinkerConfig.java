@@ -16,8 +16,8 @@ public final class TinkerConfig {
     public static final ForgeConfigSpec.IntValue defaultBaseXP;
     public static final ForgeConfigSpec.DoubleValue levelMultiplier;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> toolBaseXpOverrides;
-    public static final ForgeConfigSpec.EnumValue<SlotRewardType> slotRewardType;
-    public static final ForgeConfigSpec.IntValue slotsPerLevel;
+    public static final ForgeConfigSpec.IntValue upgradeSlotsPerLevel;
+    public static final ForgeConfigSpec.IntValue abilitySlotsPerLevel;
     public static final ForgeConfigSpec.BooleanValue allowArmorExploits;
 
     static {
@@ -39,13 +39,14 @@ public final class TinkerConfig {
         SERVER_BUILDER.pop();
 
         SERVER_BUILDER.push("rewards");
-        slotRewardType = SERVER_BUILDER
-                .comment("Slot granted on level-up. Allowed values: UPGRADE or ABILITY.",
-                        "Changing this value also changes the type of all slots earned previously.")
-                .defineEnum("slotRewardType", SlotRewardType.UPGRADE);
-        slotsPerLevel = SERVER_BUILDER
-                .comment("Number of slots granted for each level gained.")
-                .defineInRange("slotsPerLevel", 1, 1, 64);
+        upgradeSlotsPerLevel = SERVER_BUILDER
+                .comment("Number of upgrade slots granted for each level gained.",
+                        "Set to 0 to grant no upgrade slots.")
+                .defineInRange("upgradeSlotsPerLevel", 1, 0, 64);
+        abilitySlotsPerLevel = SERVER_BUILDER
+                .comment("Number of ability slots granted for each level gained.",
+                        "Set to 0 to grant no ability slots. Both slot types can be enabled together.")
+                .defineInRange("abilitySlotsPerLevel", 0, 0, 64);
         SERVER_BUILDER.pop();
 
         SERVER_BUILDER.push("gameplay");
@@ -97,8 +98,4 @@ public final class TinkerConfig {
         }
     }
 
-    public enum SlotRewardType {
-        UPGRADE,
-        ABILITY
-    }
 }

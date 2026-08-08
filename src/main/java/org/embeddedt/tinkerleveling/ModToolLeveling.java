@@ -59,6 +59,8 @@ public class ModToolLeveling extends Modifier implements BlockBreakModifierHook,
     public static final ResourceLocation XP_KEY = ResourceLocation.fromNamespaceAndPath(TinkerLeveling.MODID, "xp");
     // Keep the original NBT key so tools from earlier versions retain their earned slots.
     public static final ResourceLocation BONUS_SLOTS_KEY = ResourceLocation.fromNamespaceAndPath(TinkerLeveling.MODID, "bonus_modifiers");
+    public static final ResourceLocation BONUS_UPGRADE_SLOTS_KEY = ResourceLocation.fromNamespaceAndPath(TinkerLeveling.MODID, "bonus_upgrade_slots");
+    public static final ResourceLocation BONUS_ABILITY_SLOTS_KEY = ResourceLocation.fromNamespaceAndPath(TinkerLeveling.MODID, "bonus_ability_slots");
     public static final ResourceLocation LEVEL_KEY = ResourceLocation.fromNamespaceAndPath(TinkerLeveling.MODID, "level");
     public static final ResourceLocation UUID_KEY = ResourceLocation.fromNamespaceAndPath(TinkerLeveling.MODID, "uuid");
 
@@ -82,17 +84,22 @@ public class ModToolLeveling extends Modifier implements BlockBreakModifierHook,
     @Override
     public void addVolatileData(IToolContext context, ModifierEntry entry, ToolDataNBT volatileData) {
         IModDataView persistentData = context.getPersistentData();
-        int bonusSlots = Math.max(0, persistentData.getInt(BONUS_SLOTS_KEY));
-        SlotType slotType = TinkerConfig.slotRewardType.get() == TinkerConfig.SlotRewardType.ABILITY
-                ? SlotType.ABILITY
-                : SlotType.UPGRADE;
-        volatileData.addSlots(slotType, bonusSlots);
+        int upgradeSlots = Math.max(0, persistentData.getInt(BONUS_UPGRADE_SLOTS_KEY));
+        int abilitySlots = Math.max(0, persistentData.getInt(BONUS_ABILITY_SLOTS_KEY));
+        // Older versions stored both types as one counter; preserve those slots as upgrades.
+        if (upgradeSlots == 0 && abilitySlots == 0) {
+            upgradeSlots = Math.max(0, persistentData.getInt(BONUS_SLOTS_KEY));
+        }
+        volatileData.addSlots(SlotType.UPGRADE, upgradeSlots);
+        volatileData.addSlots(SlotType.ABILITY, abilitySlots);
     }
 
     @Override
     public Component onRemoved(IToolStackView tool, Modifier modifier) {
         tool.getPersistentData().remove(XP_KEY);
         tool.getPersistentData().remove(BONUS_SLOTS_KEY);
+        tool.getPersistentData().remove(BONUS_UPGRADE_SLOTS_KEY);
+        tool.getPersistentData().remove(BONUS_ABILITY_SLOTS_KEY);
         tool.getPersistentData().remove(LEVEL_KEY);
         tool.getPersistentData().remove(UUID_KEY);
         return null;
@@ -147,9 +154,18 @@ public class ModToolLeveling extends Modifier implements BlockBreakModifierHook,
         levelData.putInt(XP_KEY, (int) Math.min(Integer.MAX_VALUE, xp));
         if (levelsGained > 0) {
             levelData.putInt(LEVEL_KEY, level);
-            long addedSlots = (long) levelsGained * TinkerConfig.slotsPerLevel.get();
-            long totalSlots = Math.max(0, levelData.getInt(BONUS_SLOTS_KEY)) + addedSlots;
-            levelData.putInt(BONUS_SLOTS_KEY, (int) Math.min(Integer.MAX_VALUE, totalSlots));
+            int upgradeSlots = Math.max(0, levelData.getInt(BONUS_UPGRADE_SLOTS_KEY));
+            int abilitySlots = Math.max(0, levelData.getInt(BONUS_ABILITY_SLOTS_KEY));
+            if (upgradeSlots == 0 && abilitySlots == 0) {
+                upgradeSlots = Math.max(0, levelData.getInt(BONUS_SLOTS_KEY));
+            }
+            long addedUpgradeSlots = (long) levelsGained * TinkerConfig.upgradeSlotsPerLevel.get();
+            long addedAbilitySlots = (long) levelsGained * TinkerConfig.abilitySlotsPerLevel.get();
+            upgradeSlots = (int) Math.min(Integer.MAX_VALUE, upgradeSlots + addedUpgradeSlots);
+            abilitySlots = (int) Math.min(Integer.MAX_VALUE, abilitySlots + addedAbilitySlots);
+            levelData.putInt(BONUS_UPGRADE_SLOTS_KEY, upgradeSlots);
+            levelData.putInt(BONUS_ABILITY_SLOTS_KEY, abilitySlots);
+            levelData.putInt(BONUS_SLOTS_KEY, (int) Math.min(Integer.MAX_VALUE, (long) upgradeSlots + abilitySlots));
 
             if (!player.level().isClientSide) {
                 SoundUtils.playSoundForAll(player, TinkerLeveling.SOUND_LEVELUP, 1f, 1f);

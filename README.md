@@ -32,10 +32,10 @@
     toolBaseXpOverrides = ["tconstruct:pickaxe=500", "tconstruct:cleaver=750"]
 
 [rewards]
-    # UPGRADE 为升级槽，ABILITY 为能力槽。
-    slotRewardType = "UPGRADE"
-    # 每次升级获得的槽位数。
-    slotsPerLevel = 1
+    # 每次升级获得的升级槽数量。设为 0 可关闭升级槽奖励。
+    upgradeSlotsPerLevel = 1
+    # 每次升级获得的能力槽数量。设为 0 可关闭能力槽奖励；两者可同时大于 0。
+    abilitySlotsPerLevel = 0
 
 [gameplay]
     # 是否允许摔落、火焰等非生物伤害为护甲提供经验。
@@ -48,6 +48,6 @@
 基础经验 * 等级倍率 ^ (当前等级 - 1)
 ```
 
-修改配置后应重启游戏/服务器。多人游戏时客户端与服务器应使用相同配置。切换 `slotRewardType` 会将此前由本模组获得的槽位一并切换为新的类型。
+修改配置后应重启游戏/服务器。多人游戏时客户端与服务器应使用相同配置。槽位配置只影响之后的升级，已有槽位类型不会被重新分类。
 
 本项目基于 boni 与 embeddedt 的 MIT 许可实现修改，完整许可见 `LICENSE`。
